@@ -28,6 +28,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# Vercel
+.vercel/
+
 # Editor / IDE
 .idea/
 .vscode/
