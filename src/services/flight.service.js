@@ -1,31 +1,46 @@
 const FlightInstance = require('../models/FlightInstance.model');
 const Airport = require('../models/Airport.model');
 
+// Map frontend class labels → DB field names
+const CLASS_MAP = {
+  'Economy':    'economy',
+  'Premium':    'premium',
+  'Business':   'business',
+  'First Class':'firstClass',
+  'economy':    'economy',
+  'premium':    'premium',
+  'business':   'business',
+  'firstClass': 'firstClass',
+  'first':      'firstClass'
+};
+
 const searchFlights = async ({ from, to, date, passengers, travelClass }) => {
-  // 1. Find airports by code
-  const departureAirport = await Airport.findOne({ code: from });
-  const arrivalAirport = await Airport.findOne({ code: to });
+  // 1. Resolve airports
+  const departureAirport = await Airport.findOne({ code: from.toUpperCase() });
+  const arrivalAirport   = await Airport.findOne({ code: to.toUpperCase() });
 
-  if (!departureAirport || !arrivalAirport) {
-    return []; // Invalid route
-  }
+  if (!departureAirport || !arrivalAirport) return [];
 
-  // 2. Parse date for start and end of that day
+  // 2. Date range (start-of-day → end-of-day)
   const searchDate = new Date(date);
-  const startOfDay = new Date(searchDate.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(searchDate.setHours(23, 59, 59, 999));
+  const startOfDay = new Date(searchDate); startOfDay.setHours(0,  0,  0,   0);
+  const endOfDay   = new Date(searchDate); endOfDay.setHours(23, 59, 59, 999);
 
-  // 3. Search FlightInstances
-  const flights = await FlightInstance.find({
+  // 3. Resolve cabin class key (default: economy)
+  const classKey  = CLASS_MAP[travelClass] || 'economy';
+  const seatsPath = `classes.${classKey}.availableSeats`;
+
+  // 4. Query instances with enough seats in the selected class
+  const instances = await FlightInstance.find({
     departureTime: { $gte: startOfDay, $lte: endOfDay },
-    availableSeats: { $gte: passengers },
-    status: 'Scheduled'
+    [seatsPath]:   { $gte: parseInt(passengers, 10) || 1 },
+    status:        'Scheduled'
   })
   .populate({
     path: 'flight',
-    match: { 
-      departureAirport: departureAirport._id, 
-      arrivalAirport: arrivalAirport._id 
+    match: {
+      departureAirport: departureAirport._id,
+      arrivalAirport:   arrivalAirport._id
     },
     populate: [
       { path: 'airline' },
@@ -33,10 +48,18 @@ const searchFlights = async ({ from, to, date, passengers, travelClass }) => {
       { path: 'arrivalAirport' }
     ]
   })
-  .populate('aircraft');
+  .populate('aircraft')
+  .sort({ departureTime: 1 });
 
-  // Filter out instances where the flight didn't match
-  return flights.filter(inst => inst.flight !== null);
+  // 5. Filter out non-matching routes; attach selected class info to each result
+  return instances
+    .filter(inst => inst.flight !== null)
+    .map(inst => {
+      const obj = inst.toObject();
+      obj.selectedClass = classKey;
+      obj.selectedClassData = obj.classes?.[classKey] || null;
+      return obj;
+    });
 };
 
 const getFlightInstanceById = async (id) => {
@@ -59,7 +82,5 @@ const getFlightInstanceById = async (id) => {
   return flight;
 };
 
-module.exports = {
-  searchFlights,
-  getFlightInstanceById
-};
+module.exports = { searchFlights, getFlightInstanceById };
+
