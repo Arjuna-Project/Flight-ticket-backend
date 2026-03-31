@@ -1,10 +1,18 @@
-const mongoose = require('mongoose');
+const { getDB } = require('../../config/db');
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' }
-}, { timestamps: true });
+/**
+ * 👤 User Schema Structure (Native MongoDB)
+ * 
+ * {
+ *   _id: ObjectId,
+ *   name: string,
+ *   email: string,
+ *   password: string, // hashed
+ *   role: string ('user' | 'admin'),
+ *   createdAt: Date,
+ *   updatedAt: Date
+ * }
+ */
+const getUserCollection = () => getDB().collection('users');
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = getUserCollection;

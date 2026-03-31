@@ -1,11 +1,17 @@
-const mongoose = require('mongoose');
+const { getDB } = require('../../config/db');
 
-const flightSchema = new mongoose.Schema({
-  flightNumber: { type: String, required: true, unique: true, uppercase: true, trim: true },
-  airline: { type: mongoose.Schema.Types.ObjectId, ref: 'Airline', required: true },
-  departureAirport: { type: mongoose.Schema.Types.ObjectId, ref: 'Airport', required: true },
-  arrivalAirport: { type: mongoose.Schema.Types.ObjectId, ref: 'Airport', required: true },
-  durationMinutes: { type: Number, required: true }
-}, { timestamps: true });
+/**
+ * 🛫 Flight Schema Structure (Native MongoDB)
+ * 
+ * {
+ *   _id: ObjectId,
+ *   flightNumber: string,
+ *   airline: ObjectId (ref -> airlines),
+ *   departureAirport: ObjectId (ref -> airports),
+ *   arrivalAirport: ObjectId (ref -> airports),
+ *   durationMinutes: number
+ * }
+ */
+const getFlightCollection = () => getDB().collection('flights');
 
-module.exports = mongoose.model('Flight', flightSchema);
+module.exports = getFlightCollection;

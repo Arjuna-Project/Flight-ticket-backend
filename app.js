@@ -1,38 +1,22 @@
 const express = require('express');
 const cors = require('cors');
 const env = require('./config/env');
-const db = require('./config/db');
+const { connectDB } = require('./config/db');
 
 const app = express();
-
-// ✅ Connect DB inside handler (important for serverless)
-let isConnected = false;
-
-async function connectDatabase() {
-  if (!isConnected) {
-    await db();
-    isConnected = true;
-    console.log("DB Connected");
-  }
-}
 
 // Init Middleware
 app.use(cors());
 app.use(express.json());
 
-// Register Models (keep as is)
-require('./src/models/Airline.model');
-require('./src/models/Airport.model');
-require('./src/models/Aircraft.model');
-require('./src/models/User.model');
-require('./src/models/Flight.model');
-require('./src/models/FlightInstance.model');
-require('./src/models/Booking.model');
-
-// Middleware to ensure DB connection
+// Middleware to ensure DB connection for serverless
 app.use(async (req, res, next) => {
-  await connectDatabase();
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Define Routes

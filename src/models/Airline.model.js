@@ -1,9 +1,14 @@
-const mongoose = require('mongoose');
+const { getDB } = require('../../config/db');
 
-const airlineSchema = new mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  code: { type: String, required: true, unique: true, uppercase: true, trim: true },
-  logoUrl: { type: String }
-}, { timestamps: true });
+/**
+ * ✈️ Airline Schema Structure (Native MongoDB)
+ * 
+ * {
+ *   _id: ObjectId,
+ *   name: string,
+ *   code: string
+ * }
+ */
+const getAirlineCollection = () => getDB().collection('airlines');
 
-module.exports = mongoose.model('Airline', airlineSchema);
+module.exports = getAirlineCollection;

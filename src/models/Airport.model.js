@@ -1,10 +1,16 @@
-const mongoose = require('mongoose');
+const { getDB } = require('../../config/db');
 
-const airportSchema = new mongoose.Schema({
-  code: { type: String, required: true, unique: true, uppercase: true, trim: true },
-  name: { type: String, required: true },
-  city: { type: String, required: true },
-  country: { type: String, required: true }
-}, { timestamps: true });
+/**
+ * 🏙️ Airport Schema Structure (Native MongoDB)
+ * 
+ * {
+ *   _id: ObjectId,
+ *   name: string,
+ *   code: string,
+ *   city: string,
+ *   country: string
+ * }
+ */
+const getAirportCollection = () => getDB().collection('airports');
 
-module.exports = mongoose.model('Airport', airportSchema);
+module.exports = getAirportCollection;
