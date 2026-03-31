@@ -56,8 +56,16 @@ const searchFlights = async ({ from, to, date, passengers, travelClass }) => {
     .filter(inst => inst.flight !== null)
     .map(inst => {
       const obj = inst.toObject();
-      obj.selectedClass = classKey;
-      obj.selectedClassData = obj.classes?.[classKey] || null;
+      const classData = obj.classes?.[classKey] || {};
+
+      // Keep full classes object for future use
+      obj.selectedClass     = classKey;
+      obj.selectedClassData = classData;
+
+      // ⬇ Backward-compatible top-level fields the frontend already reads
+      obj.price          = classData.price          ?? 0;
+      obj.availableSeats = classData.availableSeats ?? 0;
+
       return obj;
     });
 };
@@ -79,7 +87,13 @@ const getFlightInstanceById = async (id) => {
     err.statusCode = 404;
     throw err;
   }
-  return flight;
+
+  // Attach backward-compatible top-level price (default to economy)
+  const obj = flight.toObject();
+  const econData = obj.classes?.economy || {};
+  obj.price          = econData.price          ?? 0;
+  obj.availableSeats = econData.availableSeats ?? 0;
+  return obj;
 };
 
 module.exports = { searchFlights, getFlightInstanceById };
