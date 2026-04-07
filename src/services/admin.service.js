@@ -28,7 +28,7 @@ const getAllUsers = async () => {
 const _buildBookingPipeline = (matchStage = null, limit = null) => {
   const pipeline = [];
   if (matchStage) pipeline.push(matchStage);
-  
+
   pipeline.push({ $sort: { createdAt: -1 } });
   if (limit) pipeline.push({ $limit: limit });
 
@@ -105,17 +105,17 @@ const _mapBookingResult = (b) => {
     delete b.flightData.airlineData;
     delete b.flightData.departureAirportData;
     delete b.flightData.arrivalAirportData;
-    
+
     if (b.flightInstanceData) {
       b.flightInstanceData.flight = b.flightData;
     }
   }
-  
+
   if (b.flightInstanceData) {
     b.flightInstance = b.flightInstanceData;
     delete b.flightInstanceData;
   }
-  
+
   delete b.flightData;
   return b;
 };
@@ -179,7 +179,7 @@ const getAllFlightInstances = async () => {
   ];
 
   const results = await db.collection('flightinstances').aggregate(pipeline).toArray();
-  
+
   return results.map(inst => {
     if (inst.flightInfo) {
       inst.flight = {
@@ -193,10 +193,10 @@ const getAllFlightInstances = async () => {
       delete inst.flight.arrivalAirportData;
     }
     delete inst.flightInfo;
-  
+
     inst.aircraft = inst.aircraftInfo;
     delete inst.aircraftInfo;
-  
+
     return inst;
   });
 };
@@ -208,7 +208,7 @@ const updateFlightStatus = async (instanceId, status) => {
     err.statusCode = 400;
     throw err;
   }
-  
+
   const db = getDB();
   const result = await db.collection('flightinstances').findOneAndUpdate(
     { _id: new ObjectId(instanceId) },
@@ -227,7 +227,7 @@ const updateFlightStatus = async (instanceId, status) => {
 const deleteFlightInstance = async (instanceId) => {
   const db = getDB();
   const result = await db.collection('flightinstances').findOneAndDelete({ _id: new ObjectId(instanceId) });
-  
+
   if (!result) {
     const err = new Error('Flight instance not found');
     err.statusCode = 404;

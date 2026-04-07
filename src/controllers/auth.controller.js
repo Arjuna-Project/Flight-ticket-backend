@@ -29,7 +29,7 @@ const login = async (request, response) => {
         message: "Invalid credentials"
       });
     } else {
-      return response.status(StatusCodes.OK).json({ user, token });
+      return response.status(StatusCodes.OK).json({ token, user });
     }
   } catch (error) {
     return response.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
